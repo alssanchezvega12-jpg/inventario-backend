@@ -21,33 +21,36 @@ const ProductoSchema = new mongoose.Schema({
 const Producto = mongoose.model('Producto', ProductoSchema);
 
 // Rutas API
-// Leer productos
+// Leer productos (devuelve array)
 app.get('/productos', async (req, res) => {
   try {
     const productos = await Producto.find();
-    res.json(productos);
+    res.json(productos); // siempre un array
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error al traer productos" });
   }
 });
 
-// Crear producto
+// Crear producto (devuelve objeto)
 app.post('/productos', async (req, res) => {
   try {
     const nuevoProducto = new Producto(req.body);
     await nuevoProducto.save();
-    res.json({ mensaje: "Producto registrado ✅", nuevoProducto });
+    res.json(nuevoProducto); // solo el producto creado
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error al guardar producto" });
   }
 });
 
-// Eliminar producto
+// Eliminar producto (devuelve mensaje)
 app.delete('/productos/:id', async (req, res) => {
   try {
-    await Producto.findByIdAndDelete(req.params.id);
+    const eliminado = await Producto.findByIdAndDelete(req.params.id);
+    if (!eliminado) {
+      return res.status(404).json({ mensaje: "Producto no encontrado ❌" });
+    }
     res.json({ mensaje: "Producto eliminado ✅" });
   } catch (error) {
     console.error(error);
@@ -55,7 +58,7 @@ app.delete('/productos/:id', async (req, res) => {
   }
 });
 
-// Editar producto
+// Editar producto (devuelve objeto actualizado)
 app.put('/productos/:id', async (req, res) => {
   try {
     const actualizado = await Producto.findByIdAndUpdate(
@@ -63,7 +66,10 @@ app.put('/productos/:id', async (req, res) => {
       req.body,
       { new: true }
     );
-    res.json({ mensaje: "Producto actualizado ✏️✅", actualizado });
+    if (!actualizado) {
+      return res.status(404).json({ mensaje: "Producto no encontrado ❌" });
+    }
+    res.json(actualizado); // solo el producto actualizado
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error al actualizar producto" });
